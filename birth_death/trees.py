@@ -18,11 +18,6 @@ class TreeNode:
         self._height = 0 if parent is None else parent._height + 1
         self._slot = slot
 
-    @property
-    def slots(self) -> TreeNode | None:
-
-        return self._slots.copy() # defensive
-
     def grow(self, slot: int) -> TreeNode | None:
         """
         Grow a tree in the slot, if possible and return
@@ -57,13 +52,6 @@ class TreeNode:
 
         return self._height
     
-def _del_sub(node: TreeNode):
-    # depth first search
-    for child in node.slots:
-        if child is not None:
-            _del_sub(child)
-    del node
-
 class BinaryTree:
     """
     A class of evolving binary trees.
@@ -79,10 +67,7 @@ class BinaryTree:
 
         self._leaves = [self._root]
         self._height = 0
-
-    def __del__(self):
-
-        _del_sub(self._root)
+        self._maxleaves = 1
 
     def move(self):
         """
@@ -99,15 +84,24 @@ class BinaryTree:
                         newleaves.append(newleaf)
             parent = leaf.shrink() # not None indicates death
             if parent is not None:
+                # no duplication is important
                 if not any((_ is parent for _ in parents)):
                     parents.append(parent)
                 del leaf
         self._leaves = newleaves + parents
+        self._maxleaves = max(self._maxleaves, len(self._leaves))
         if self._root.is_empty: # back at start
             self._height = 0
         else:
             self._height = max((_.height for _ in self._leaves))
 
+    @property
+    def maxleaves(self):
+        """
+        The maximum number of leaves during simulation
+        """
+        return self._maxleaves
+    
     @property
     def height(self):
 
@@ -125,9 +119,9 @@ def one_sim(prob: float, height_bound) -> Tuple[str, int] | str:
         tree.move()
         count += 1
         if tree.is_root:
-            return ('r', count)
+            return ('r', count), tree.maxleaves
         elif tree.height >= height_bound:
-            return 'a'
+            return 'a', tree.maxleaves
     del tree
     
 def simulate(prob: float, height_bound: int, tries: int) -> Tuple[List[int], int]:
@@ -136,5 +130,6 @@ def simulate(prob: float, height_bound: int, tries: int) -> Tuple[List[int], int
     return the list of transit times for the recurrent states, plus the number
     of absorbed.
     """
-
-    return Counter((one_sim(prob, height_bound) for _ in range(tries)))
+    stats, leaves = zip(*(one_sim(prob, height_bound)
+        for _ in range(tries)))
+    return Counter(stats), Counter(leaves)
