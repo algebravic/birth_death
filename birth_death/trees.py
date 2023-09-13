@@ -19,13 +19,14 @@ class TreeNode:
         self._slot = slot
 
     @property
-    def slot(self, num: int) -> TreeNode | None:
+    def slots(self) -> TreeNode | None:
 
-        return self._slots[num]
+        return self._slots.copy() # defensive
 
     def grow(self, slot: int) -> TreeNode | None:
         """
-        Grow a tree in the slot
+        Grow a tree in the slot, if possible and return
+        the new tree.  Otherwise return None.
         """
         if self._slots[slot] is None:
             self._slots[slot] = TreeNode(slot, self)
@@ -39,6 +40,11 @@ class TreeNode:
         return all((val is None for val in self._slots))
 
     def shrink(self) -> TreeNode | None:
+        """
+        If this node is should be deleted, modify
+        the parent pointer (if any) to be None,
+        and return the parent.  Otherwise return None.
+        """
 
         if self.is_empty:
             if self._parent is not None:
@@ -52,12 +58,10 @@ class TreeNode:
         return self._height
     
 def _del_sub(node: TreeNode):
-
-    for ind in range(2):
-
-        if node._slots[ind] is not None:
-            _del_sub(node._slots[ind])
-
+    # depth first search
+    for child in node.slots:
+        if child is not None:
+            _del_sub(child)
     del node
 
 class BinaryTree:
@@ -114,6 +118,18 @@ class BinaryTree:
 
         return self._height == 0
 
+def one_sim(prob: float, height_bound) -> Tuple[str, int] | str:
+    tree = BinaryTree(prob)
+    count = 0
+    while True:
+        tree.move()
+        count += 1
+        if tree.is_root:
+            return ('r', count)
+        elif tree.height >= height_bound:
+            return 'a'
+    del tree
+    
 def simulate(prob: float, height_bound: int, tries: int) -> Tuple[List[int], int]:
     """
     Simulate the birth/death process with an absorbing state of height_bound.
@@ -121,21 +137,4 @@ def simulate(prob: float, height_bound: int, tries: int) -> Tuple[List[int], int
     of absorbed.
     """
 
-    transit = []
-    absorbed = 0
-
-    for ind in range(tries):
-
-        tree = BinaryTree(prob)
-        count = 0
-        while True:
-            tree.move()
-            count += 1
-            if tree.height == 0:
-                transit.append(count)
-                break
-            elif tree.height >= height_bound:
-                absorbed += 1
-                break
-        del tree
-    return Counter(transit), absorbed
+    return Counter((one_sim(prob, height_bound) for _ in range(tries)))
