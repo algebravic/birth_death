@@ -78,10 +78,12 @@ class BinaryTree:
         self._maxleaves = 1
 
     def _process(self, leaf: TreeNode) -> Iterable[OPERATION]:
+        added = False
         for ind in leaf.empties():
             if random() <= self._probs[ind]:
+                added = True
                 yield ('a', (leaf, ind)) # add a new node at leaf[ind]
-        if leaf.is_empty and leaf is not self._root:
+        if not added and leaf.is_empty and leaf is not self._root:
             yield ('d', leaf) # delete this node
         
     def move(self):
