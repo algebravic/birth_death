@@ -1,13 +1,16 @@
 """
 Evolving Binary trees.
 """
-from typing import List, Tuple
+from typing import List, Tuple, Iterable
 from random import random
 from collections import Counter
+from itertools import chain
 
 class TreeNode:
 
     pass
+
+OPERATION = Tuple[str, TreeNode] | Tuple[str, TreeNode, int]
 
 class TreeNode:
 
@@ -17,6 +20,13 @@ class TreeNode:
         self._parent = parent
         self._height = 0 if parent is None else parent._height + 1
         self._slot = slot
+
+    def empties(self) -> Iterable[int]:
+        """
+        Sequence of empty slots.
+        """
+        yield from ((ind for ind, val in enumerate(self._slots)
+                     if val is None))
 
     def grow(self, slot: int) -> TreeNode | None:
         """
@@ -34,18 +44,16 @@ class TreeNode:
 
         return all((val is None for val in self._slots))
 
-    def shrink(self) -> TreeNode | None:
+    def shrink(self) -> Iterable[OPERATION]:
         """
         If this node is should be deleted, modify
         the parent pointer (if any) to be None,
         and return the parent.  Otherwise return None.
         """
-
-        if self.is_empty:
-            if self._parent is not None:
-                self._parent._slots[self._slot] = None
-            return self._parent
-        return None
+        parent = self._parent
+        if parent is not None:
+            parent._slots[self._slot] = None
+        return parent
 
     @property
     def height(self) -> int:
@@ -69,25 +77,35 @@ class BinaryTree:
         self._height = 0
         self._maxleaves = 1
 
+    def _process(self, leaf: TreeNode) -> Iterable[OPERATION]:
+        for ind in leaf.empties():
+            if random() <= self._probs[ind]:
+                yield ('a', (leaf, ind)) # add a new node at leaf[ind]
+        if leaf.is_empty and leaf is not self._root:
+            yield ('d', leaf) # delete this node
+        
     def move(self):
         """
         Make one transition.
         """
         newleaves = []
         parents = []
-        # The height is the maximum height of the leaves
-        for leaf in self._leaves:
-            for ind in range(2):
-                if random() < self._probs[ind]:
-                    newleaf = leaf.grow(ind)
-                    if newleaf is not None:
-                        newleaves.append(newleaf)
-            parent = leaf.shrink() # not None indicates death
-            if parent is not None:
-                # no duplication is important
-                if not any((_ is parent for _ in parents)):
+        # Note: list is important
+        # We must process everything before doing surgery
+        for op, args in list(chain(*map(self._process, self._leaves))):
+            if op == 'a':
+                leaf, ind = args
+                node = leaf.grow(ind)
+                if node is not None:
+                    newleaves.append(node)
+            elif op == 'd':
+                parent = args.shrink()
+                if (parent is not None
+                    and not any((_ is parent for _ in parents))):
                     parents.append(parent)
-                del leaf
+                del args
+            else:
+                raise ValueError(f"Illegal operation {op}")
         self._leaves = newleaves + parents
         self._maxleaves = max(self._maxleaves, len(self._leaves))
         if self._root.is_empty: # back at start
@@ -121,7 +139,7 @@ def one_sim(prob: float, height_bound) -> Tuple[str, int] | str:
         if tree.is_root:
             return ('r', count), tree.maxleaves
         elif tree.height >= height_bound:
-            return 'a', tree.maxleaves
+            return ('a', count), tree.maxleaves
     del tree
     
 def simulate(prob: float, height_bound: int, tries: int) -> Tuple[List[int], int]:
