@@ -137,14 +137,20 @@ class BinaryTree:
 def one_sim(prob: float, height_bound) -> Tuple[str, int] | str:
     tree = BinaryTree(prob)
     count = 0
-    while True:
+    finished = False
+    while not finished:
         tree.move()
         count += 1
+        finished = True
         if tree.is_root:
-            return ('r', count), tree.maxleaves
+            result = ('r', count), tree.maxleaves
         elif tree.height >= height_bound:
-            return ('a', count), tree.maxleaves
+            result =  ('a', count), tree.maxleaves
+        else:
+            finished = False
+    
     del tree
+    return result
     
 def simulate(prob: float, height_bound: int, tries: int) -> Tuple[List[int], int]:
     """
