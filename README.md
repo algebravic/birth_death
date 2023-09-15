@@ -16,10 +16,10 @@ We are interested in the long term behavior of this Markov Chain.
 
 There are three possible behavior: *positive recurrent*, *null
 recurrent*, or *transient*.  We Recall the definitions: If $M$ is a
-countable Markov Chain started in state `$s_0$`, we can define a
+countable Markov Chain started in state $`s_0`$, we can define a
 random variable $T$ which is the time (number of steps) that it takes
-for $M$ to return to state `$s_0$`. The chain $M$ is *recurrent* if
-$\lim_{k \rightarrow \infty}\Pr(T \le k) = 1$ (i.e. $M$ almost surely
-returns to `$s_0$`). It is *positive recurrent* if $E(T) < \infty$,
+for $M$ to return to state $`s_0`$. The chain $M$ is *recurrent* if
+$`\lim_{k \rightarrow \infty}\Pr(T \le k) = 1`$ (i.e. $M$ almost surely
+returns to $`s_0`$). It is *positive recurrent* if $E(T) < \infty$,
 and *null recurrent* otherwise. If it is not recurrent, it is said to
 be *transient*.
