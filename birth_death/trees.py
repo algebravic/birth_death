@@ -49,6 +49,8 @@ class TreeNode:
         If this node is should be deleted, modify
         the parent pointer (if any) to be None,
         and return the parent.  Otherwise return None.
+
+        Note that the root's parent is None
         """
         parent = self._parent
         if parent is not None:
