@@ -14,8 +14,8 @@ with two children.  However, if a node with 0 children fails to fill
 in both slots it then "dies", freeing up the slot that it lives in.
 We are interested in the long term behavior of this Markov Chain.
 
-There are three possible behavior: *positive recurrent*, *null
-recurrent*, or *transient*.  We Recall the definitions: If $M$ is a
+There are three possible behaviors: *positive recurrent*, *null
+recurrent*, or *transient*.  We recall the definitions: If $M$ is a
 countable Markov Chain started in state $`s_0`$, we can define a
 random variable $T$ which is the time (number of steps) that it takes
 for $M$ to return to state $`s_0`$. The chain $M$ is *recurrent* if
